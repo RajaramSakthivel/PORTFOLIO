@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Gallery with Zoom and Dark/Light Mode</title>
+    <!-- Link to FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            transition: background-color 0.5s, color 0.5s;
+        }
+
+        /* Light mode styles */
+        .light-mode {
+            background-color: #fff;
+            color: #000;
+        }
+
+        /* Dark mode styles */
+        .dark-mode {
+            background-color: #000;
+            color: #fff;
+        }
+
+        div.gallery {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        div.gallery img {
+            width: 400px;
+            height: 300px;
+            border: 2px solid #ff3d0036;
+            border-radius: 13px;
+            box-shadow: 4px 7px 7px 0px #00000042;
+            cursor: pointer;
+            margin: 10px;
+            transition: 400ms;
+        }
+        div.gallery img:hover {
+            filter: grayscale(1);
+            transform: scale(1.03);
+        }
+
+        /* Modal styles */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed;
+            z-index: 1;
+            padding-top: 100px;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.9);
+        }
+
+        .modal-content {
+            margin: auto;
+            display: block;
+            width: 80%;
+            max-width: 700px;
+            transition: transform 0.25s ease;
+        }
+
+        .close {
+            position: absolute;
+            top: 15px;
+            right: 35px;
+            color: #fff;
+            font-size: 40px;
+            font-weight: bold;
+            transition: 0.3s;
+            cursor: pointer;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: #bbb;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        /* Add grab cursor when hovering */
+        .modal-content:active {
+            cursor: grabbing;
+        }
+
+        /* Dark/Light Mode Toggle Button */
+        .toggle-mode {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px;
+            background-color: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 24px;
+        }
+
+        .toggle-mode i {
+            color: currentColor;
+        }
+
+        .navigate-home {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: white;
+            font-size: 18px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
+            text-decoration: none;
+        }
+
+        .navigate-home:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body class="light-mode">
+
+    <center>
+        <h1>CERTIFICATIONS</h1>
+    </center>
+
+    <div class="gallery">
+        <img src="assets/img/AI-ML Virtual Internship_page-0001.jpg" alt="AI-ML Virtual Internship" onclick="openModal(this.src)">
+        <img src="assets/img/Cloud Virtual Internship_page-0001.jpg" alt="Cloud Virtual Internship" onclick="openModal(this.src)">
+        <img src="assets/img/Data Analytics Process Automation Virtual Internship_page-0001.jpg" alt="Data Analytics Process Automation Virtual Internship" onclick="openModal(this.src)">
+        <img src="assets/img/Digital 101 Journey_page-0001.jpg" alt="Digital 101 Journey" onclick="openModal(this.src)">
+        <img src="assets/img/Digital marketing and E-commerce_page-0001.jpg" alt="Digital Marketing and E-commerce" onclick="openModal(this.src)">
+        <img src="assets/img/sql_intermediate certificate_page-0001.jpg" alt="SQL Intermediate Certificate" onclick="openModal(this.src)">
+    </div>
+
+    <!-- The Modal -->
+    <div id="myModal" class="modal">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <img class="modal-content" id="modalImg">
+    </div>
+
+    <!-- Navigate to Index Page Button -->
+    <a href="index.html" class="navigate-home">PORTFOLIO</a>
+
+    <!-- Dark/Light Mode Toggle Button -->
+    <button class="toggle-mode" onclick="toggleMode()">
+        <i id="toggle-icon" class="fas fa-sun"></i>
+    </button>
+
+    <script>
+        let scale = 1;
+        let translateX = 0;
+        let translateY = 0;
+        let startX, startY;
+        let isDragging = false;
+
+        const modal = document.getElementById("myModal");
+        const modalImg = document.getElementById("modalImg");
+        const body = document.body;
+        const toggleIcon = document.getElementById('toggle-icon');
+
+        function openModal(src) {
+            modal.style.display = "block";
+            modalImg.src = src;
+            resetZoomAndPan();
+        }
+
+        function closeModal() {
+            modal.style.display = "none";
+        }
+
+        // Reset zoom and pan on image change
+        function resetZoomAndPan() {
+            scale = 1;
+            translateX = 0;
+            translateY = 0;
+            modalImg.style.transform = `scale(${scale}) translate(${translateX}px, ${translateY}px)`;
+        }
+
+        // Add event listener for mouse wheel scroll to zoom in/out
+        modalImg.addEventListener('wheel', function(event) {
+            event.preventDefault();
+
+            if (event.deltaY < 0) {
+                // Zoom in
+                scale += 0.1;
+            } else {
+                // Zoom out
+                scale -= 0.1;
+            }
+
+            scale = Math.min(Math.max(.5, scale), 3);
+            modalImg.style.transform = `scale(${scale}) translate(${translateX}px, ${translateY}px)`;
+        });
+
+        // Add event listeners for dragging the image
+        modalImg.addEventListener('mousedown', function(event) {
+            isDragging = true;
+            startX = event.clientX - translateX;
+            startY = event.clientY - translateY;
+        });
+
+        document.addEventListener('mousemove', function(event) {
+            if (isDragging) {
+                translateX = event.clientX - startX;
+                translateY = event.clientY - startY;
+                modalImg.style.transform = `scale(${scale}) translate(${translateX}px, ${translateY}px)`;
+            }
+        });
+
+        document.addEventListener('mouseup', function() {
+            isDragging = false;
+        });
+
+        document.addEventListener('mouseleave', function() {
+            isDragging = false;
+        });
+
+        // Function to toggle dark/light mode
+        function toggleMode() {
+            if (body.classList.contains("light-mode")) {
+                body.classList.remove("light-mode");
+                body.classList.add("dark-mode");
+                toggleIcon.classList.remove('fa-sun');
+                toggleIcon.classList.add('fa-moon');
+            } else {
+                body.classList.remove("dark-mode");
+                body.classList.add("light-mode");
+                toggleIcon.classList.remove('fa-moon');
+                toggleIcon.classList.add('fa-sun');
+            }
+        }
+    </script>
+
+</body>
+</html>
